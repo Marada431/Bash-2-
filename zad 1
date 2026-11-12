@@ -1,0 +1,34 @@
+#!/bin/bash
+
+prog=85
+verbose=0
+log="$HOME/dysk.log"
+
+helpus() {
+    echo "Used: $0 [-p PROCENT] [-v] [-h]"
+}
+
+while getopts "p:vh" opt; do
+    case $opt in
+        p) prog=$OPTARG ;;
+        v) verbose=1 ;;
+        h) helpus; exit 0 ;;
+        *) helpus; exit 1 ;;
+    esac
+done
+
+ resalut=0
+
+while read -r proc mnt; do
+    proc=${proc%\%}
+    [[ $proc =~ ^[0-9]+$ ]] || continue
+
+    if [ "$proc" -gt "$prog" ]; then
+        echo "Warnig : $mnt used $proc% (prog $prog%)" >> "$log"
+        resalut=1
+    elif [ "$verbose" -eq 1 ]; then
+        echo "$mnt: $proc% - ok"
+    fi
+done < <(df --output=pcent,target | tail -n +2)
+
+exit $resalut
